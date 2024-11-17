@@ -1,0 +1,22 @@
+services:
+  customer-service:
+    build:
+      context: ./customer-service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8080"
+    volumes:
+      - "customer-db-volume:/app/customer-service.db"    # Fixed path
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8080"
+    volumes:
+      - "product-db-volume:/app/product.db"    # Fixed path
+
+volumes:
+  product-db-volume:
+  customer-db-volume:
