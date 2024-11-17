@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/customers")
+@RequestMapping("/")
 @RequiredArgsConstructor
 @Tag(name = "Customer Management API", description = "APIs for managing customer information")
 public class CustomerController {
