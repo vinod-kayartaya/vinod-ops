@@ -6,7 +6,7 @@ services:
     ports:
       - "8001:8080"
     volumes:
-      - "customer-db-volume:/app/customer-service.db"    # Fixed path
+      - "customer-db-volume:/app/customer-service.db"
 
   product-service:
     build:
@@ -15,7 +15,15 @@ services:
     ports:
       - "8002:8080"
     volumes:
-      - "product-db-volume:/app/product.db"    # Fixed path
+      - "product-db-volume:/app/product.db"
+
+
+  event-grid-viewer-site:
+    build:
+      context: ./event-grid-viewer
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8080"
 
 volumes:
   product-db-volume:

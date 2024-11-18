@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Event Grid Viewer</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"/>
+    <style>
+        .event-card {
+            margin-bottom: 1rem;
+        }
+        .event-time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Event Grid Viewer</span>
+        <button class="btn btn-outline-danger" onclick="clearEvents()">Clear Events</button>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Events</h5>
+                    <div class="webhook-url" id="webhookUrl"></div>
+                </div>
+                <div class="card-body">
+                    <div id="events"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Webhook URL</h6>
+                    <p id="webhookUrlDisplay"></p>
+                    <hr>
+                    <h6>Usage</h6>
+                    <p>Use this URL as your Event Grid webhook endpoint. Events will appear in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+        let stompClient = null;
+        const eventsDiv = document.getElementById('events');
+
+        function connect() {
+            const socket = new SockJS('/websocket');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/events', function(message) {
+                    showEvent(JSON.parse(message.body));
+                });
+                stompClient.subscribe('/topic/clear', function() {
+                    clearEventDisplay();
+                });
+            });
+        }
+
+        function showEvent(event) {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-card card';
+            eventDiv.innerHTML = `
+                <div class="card-body">
+                    <h5 class="card-title">${event.eventType}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${event.subject}</h6>
+                    <div class="event-time mb-2">${event.eventTime}</div>
+                    <pre class="mb-0"><code>${JSON.stringify(event.data, null, 2)}</code></pre>
+                </div>
+            `;
+            eventsDiv.insertBefore(eventDiv, eventsDiv.firstChild);
+        }
+
+        function clearEvents() {
+            fetch('/api/events', { method: 'DELETE' })
+                .then(() => clearEventDisplay());
+        }
+
+        function clearEventDisplay() {
+            eventsDiv.innerHTML = '';
+        }
+
+        function updateWebhookUrl() {
+            const url = `${window.location.protocol}//${window.location.host}/api/events`;
+            document.getElementById('webhookUrl').textContent = url;
+            document.getElementById('webhookUrlDisplay').textContent = url;
+        }
+
+        connect();
+        updateWebhookUrl();
+    </script>
+</body>
+</html>
